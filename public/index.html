@@ -54,6 +54,9 @@ button {
 <body>
 
 <h2>🎨 Candinho</h2>
+
+<img src="https://i.imgur.com/iWmEdZz.jpeg" width="120" style="border-radius:50%;" />
+
 <p>Vamos aprender arte juntos! 😊</p>
 
 <div id="chat"></div>
@@ -63,8 +66,12 @@ button {
 <input id="msg" placeholder="Pergunte sobre arte..." />
 <button onclick="enviar()">Enviar</button>
 
+<br><br>
+
+<button onclick="toggleSom()" id="btnSom">🔈 Som: ON</button>
+
 <script>
-// ⏱️ CONTROLE DE TEMPO (1 hora por dia)
+// ⏱️ CONTROLE DE TEMPO
 
 function tempoHoje() {
   const hoje = new Date().toDateString();
@@ -83,22 +90,33 @@ function salvarTempo(uso) {
 
 function podeUsar() {
   const uso = tempoHoje();
-  return uso.tempo < 3600; // 1 hora
+  return uso.tempo < 3600;
 }
 
-// ⏳ contador automático
+// ⏳ contador
 setInterval(() => {
   let uso = tempoHoje();
   uso.tempo += 5;
   salvarTempo(uso);
 }, 5000);
 
-// 🎤 função falar (voz simples)
+// 🔊 controle de som
+let somAtivo = true;
+
+function toggleSom() {
+  somAtivo = !somAtivo;
+  document.getElementById("btnSom").innerText =
+    somAtivo ? "🔈 Som: ON" : "🔇 Som: OFF";
+}
+
 function falar(texto) {
+  if (!somAtivo) return;
+
   const msg = new SpeechSynthesisUtterance(texto);
   msg.lang = "pt-BR";
   msg.pitch = 1.4;
   msg.rate = 0.9;
+
   speechSynthesis.speak(msg);
 }
 
@@ -107,10 +125,9 @@ async function enviar() {
   const input = document.getElementById("msg");
   const chat = document.getElementById("chat");
 
-  const mensagem = input.value;
+  const mensagem = input.value.trim();
   if (!mensagem) return;
 
-  // ⛔ limite diário
   if (!podeUsar()) {
     alert("Tempo esgotado por hoje 😊 volte amanhã!");
     return;
@@ -118,23 +135,35 @@ async function enviar() {
 
   chat.innerHTML += `<p class="user">👦 ${mensagem}</p>`;
 
-  const res = await fetch("/api/chat", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ mensagem })
-  });
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ mensagem })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  chat.innerHTML += `<p class="bot">🎨 ${data.resposta}</p>`;
+    chat.innerHTML += `<p class="bot">🎨 ${data.resposta}</p>`;
 
-  falar(data.resposta); // 🔊 Candinho fala
+    falar(data.resposta);
+
+  } catch (e) {
+    chat.innerHTML += `<p style="color:red;">Erro de conexão 😢</p>`;
+  }
 
   chat.scrollTop = chat.scrollHeight;
   input.value = "";
 }
+
+// ⌨️ ENTER para enviar
+document.getElementById("msg").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") {
+    enviar();
+  }
+});
 </script>
 
 </body>
