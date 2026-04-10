@@ -1,4 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Candinho 🎨</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f0f8ff;
+  text-align: center;
+}
+
+h2 {
+  color: #ff7f50;
+}
+
+#chat {
+  max-width: 400px;
+  margin: auto;
+  background: white;
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 15px;
+  border: 2px solid #ddd;
+}
+
+input {
+  padding: 10px;
+  width: 65%;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px;
+  border-radius: 10px;
+  background: #ffcc00;
+  border: none;
+  cursor: pointer;
+}
+
+.bot {
+  color: blue;
+}
+
+.user {
+  color: green;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🎨 Candinho</h2>
+<p>Vamos aprender arte juntos! 😊</p>
+
+<div id="chat"></div>
+
+<br>
+
+<input id="msg" placeholder="Pergunte sobre arte..." />
+<button onclick="enviar()">Enviar</button>
+
 <script>
+// ⏱️ CONTROLE DE TEMPO (1 hora por dia)
+
+function tempoHoje() {
+  const hoje = new Date().toDateString();
+  let uso = JSON.parse(localStorage.getItem("usoCandinho")) || {};
+
+  if (uso.data !== hoje) {
+    uso = { data: hoje, tempo: 0 };
+  }
+
+  return uso;
+}
+
+function salvarTempo(uso) {
+  localStorage.setItem("usoCandinho", JSON.stringify(uso));
+}
+
+function podeUsar() {
+  const uso = tempoHoje();
+  return uso.tempo < 3600; // 1 hora
+}
+
+// ⏳ contador automático
+setInterval(() => {
+  let uso = tempoHoje();
+  uso.tempo += 5;
+  salvarTempo(uso);
+}, 5000);
+
+// 🎤 função falar (voz simples)
 function falar(texto) {
   const msg = new SpeechSynthesisUtterance(texto);
   msg.lang = "pt-BR";
@@ -7,17 +102,7 @@ function falar(texto) {
   speechSynthesis.speak(msg);
 }
 
-function salvarMemoria(memoria) {
-  localStorage.setItem("candinho", JSON.stringify(memoria));
-}
-
-function carregarMemoria() {
-  return JSON.parse(localStorage.getItem("candinho")) || {
-    nome: null,
-    ultimaPergunta: null
-  };
-}
-
+// 🚀 enviar mensagem
 async function enviar() {
   const input = document.getElementById("msg");
   const chat = document.getElementById("chat");
@@ -25,24 +110,32 @@ async function enviar() {
   const mensagem = input.value;
   if (!mensagem) return;
 
-  let memoria = carregarMemoria();
-  memoria.ultimaPergunta = mensagem;
+  // ⛔ limite diário
+  if (!podeUsar()) {
+    alert("Tempo esgotado por hoje 😊 volte amanhã!");
+    return;
+  }
 
-  chat.innerHTML += `<p>👦 ${mensagem}</p>`;
+  chat.innerHTML += `<p class="user">👦 ${mensagem}</p>`;
 
   const res = await fetch("/api/chat", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ mensagem, memoria })
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ mensagem })
   });
 
   const data = await res.json();
 
-  chat.innerHTML += `<p>🤖 ${data.resposta}</p>`;
+  chat.innerHTML += `<p class="bot">🎨 ${data.resposta}</p>`;
 
-  falar(data.resposta); // 🔊 voz automática
+  falar(data.resposta); // 🔊 Candinho fala
 
-  salvarMemoria(memoria);
+  chat.scrollTop = chat.scrollHeight;
   input.value = "";
 }
 </script>
+
+</body>
+</html>
