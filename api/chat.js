@@ -4,9 +4,20 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// 🔒 filtro de segurança
 function filtroSeguro(texto) {
   const proibidos = ["sexo", "arma", "matar", "droga"];
   return !proibidos.some(p => texto.toLowerCase().includes(p));
+}
+
+// 🎨 filtro de arte
+function assuntoArte(texto) {
+  const palavras = [
+    "arte", "desenho", "pintura", "cor",
+    "artista", "quadro", "museu", "escultura"
+  ];
+
+  return palavras.some(p => texto.toLowerCase().includes(p));
 }
 
 export default async function handler(req, res) {
@@ -16,9 +27,17 @@ export default async function handler(req, res) {
 
   const { mensagem } = req.body;
 
+  // 🔒 segurança
   if (!filtroSeguro(mensagem)) {
     return res.json({
       resposta: "Vamos focar nos estudos 😊"
+    });
+  }
+
+  // 🎨 bloqueio fora da arte
+  if (!assuntoArte(mensagem)) {
+    return res.json({
+      resposta: "Vamos falar de arte! 🎨"
     });
   }
 
@@ -29,7 +48,6 @@ export default async function handler(req, res) {
         {
           role: "system",
           content: `
-content: `
 Você é Candinho 🎨
 
 Um assistente infantil especializado em ARTE.
@@ -43,13 +61,12 @@ Você só pode falar sobre:
 
 Regras:
 - Fale simples e divertido
-- Ensine como professor infantil
-- Nunca responda assuntos fora da arte
-
-Se perguntarem algo fora disso:
-"Vamos falar de arte! 🎨 Que tal desenhar algo comigo?"
 - Ensine passo a passo
 - Nunca fale temas adultos
+- Nunca responda assuntos fora da arte
+
+Se sair do tema:
+"Vamos falar de arte! 🎨 Que tal desenhar algo comigo?"
 `
         },
         {
