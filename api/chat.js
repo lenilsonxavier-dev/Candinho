@@ -4,44 +4,14 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// 🔒 filtro de segurança
-function filtroSeguro(texto) {
-  const proibidos = ["sexo", "arma", "matar", "droga"];
-  return !proibidos.some(p => texto.toLowerCase().includes(p));
-}
-
-// 🎨 filtro de arte
-function assuntoArte(texto) {
-  const palavras = [
-    "arte", "desenho", "pintura", "cor",
-    "artista", "quadro", "museu", "escultura"
-  ];
-
-  return palavras.some(p => texto.toLowerCase().includes(p));
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).send("Método não permitido");
-  }
-
-  const { mensagem } = req.body;
-
-  // 🔒 segurança
-  if (!filtroSeguro(mensagem)) {
-    return res.json({
-      resposta: "Vamos focar nos estudos 😊"
-    });
-  }
-
-  // 🎨 bloqueio fora da arte
-  if (!assuntoArte(mensagem)) {
-    return res.json({
-      resposta: "Vamos falar de arte! 🎨"
-    });
+    return res.status(405).json({ erro: "Método não permitido" });
   }
 
   try {
+    const { mensagem } = req.body;
+
     const resposta = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -49,24 +19,9 @@ export default async function handler(req, res) {
           role: "system",
           content: `
 Você é Candinho 🎨
-
-Um assistente infantil especializado em ARTE.
-
-Você só pode falar sobre:
-- pintura
-- desenho
-- artistas
-- história da arte
-- cores e técnicas
-
-Regras:
-- Fale simples e divertido
-- Ensine passo a passo
-- Nunca fale temas adultos
-- Nunca responda assuntos fora da arte
-
-Se sair do tema:
-"Vamos falar de arte! 🎨 Que tal desenhar algo comigo?"
+Um assistente infantil que fala apenas sobre arte.
+Use linguagem simples e divertida.
+Nunca responda fora do tema arte.
 `
         },
         {
@@ -76,13 +31,16 @@ Se sair do tema:
       ]
     });
 
-    return res.json({
+    return res.status(200).json({
       resposta: resposta.choices[0].message.content
     });
 
-  } catch (e) {
-    return res.json({
-      resposta: "Tive um errinho 😢 tenta de novo!"
+  } catch (erro) {
+    console.error("ERRO:", erro);
+
+    return res.status(500).json({
+      resposta: "Erro interno 😢",
+      detalhe: erro.message
     });
   }
 }
