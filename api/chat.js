@@ -8,9 +8,10 @@ export default async function handler(req, res) {
   try {
     const { mensagem } = req.body;
 
+    // 🔑 verifica chave
     if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({
-        resposta: "Chave da API não encontrada ❌"
+        erro: "API KEY não encontrada no Vercel"
       });
     }
 
@@ -23,7 +24,7 @@ export default async function handler(req, res) {
       messages: [
         {
           role: "system",
-          content: "Você é Candinho, um professor infantil de arte."
+          content: "Você é Candinho 🎨, professor infantil de arte."
         },
         {
           role: "user",
@@ -37,10 +38,10 @@ export default async function handler(req, res) {
     });
 
   } catch (erro) {
-    console.error("ERRO REAL:", erro);
+    console.error("ERRO COMPLETO:", erro);
 
     return res.status(500).json({
-      resposta: "Erro interno 😢",
+      erro: "Erro interno",
       detalhe: erro.message
     });
   }
