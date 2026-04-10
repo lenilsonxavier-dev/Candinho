@@ -1,0 +1,48 @@
+<script>
+function falar(texto) {
+  const msg = new SpeechSynthesisUtterance(texto);
+  msg.lang = "pt-BR";
+  msg.pitch = 1.4;
+  msg.rate = 0.9;
+  speechSynthesis.speak(msg);
+}
+
+function salvarMemoria(memoria) {
+  localStorage.setItem("candinho", JSON.stringify(memoria));
+}
+
+function carregarMemoria() {
+  return JSON.parse(localStorage.getItem("candinho")) || {
+    nome: null,
+    ultimaPergunta: null
+  };
+}
+
+async function enviar() {
+  const input = document.getElementById("msg");
+  const chat = document.getElementById("chat");
+
+  const mensagem = input.value;
+  if (!mensagem) return;
+
+  let memoria = carregarMemoria();
+  memoria.ultimaPergunta = mensagem;
+
+  chat.innerHTML += `<p>👦 ${mensagem}</p>`;
+
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ mensagem, memoria })
+  });
+
+  const data = await res.json();
+
+  chat.innerHTML += `<p>🤖 ${data.resposta}</p>`;
+
+  falar(data.resposta); // 🔊 voz automática
+
+  salvarMemoria(memoria);
+  input.value = "";
+}
+</script>
