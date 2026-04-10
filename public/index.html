@@ -11,10 +11,6 @@ body {
   text-align: center;
 }
 
-h2 {
-  color: #ff7f50;
-}
-
 #chat {
   max-width: 400px;
   margin: auto;
@@ -23,26 +19,12 @@ h2 {
   overflow-y: auto;
   padding: 10px;
   border-radius: 15px;
-  border: 2px solid #ddd;
 }
 
-input {
+input, button {
   padding: 10px;
-  width: 65%;
-  border-radius: 10px;
-  border: 1px solid #ccc;
+  margin-top: 10px;
 }
-
-button {
-  padding: 10px;
-  border-radius: 10px;
-  background: #ffcc00;
-  border: none;
-  cursor: pointer;
-}
-
-.bot { color: blue; }
-.user { color: green; }
 </style>
 </head>
 
@@ -52,99 +34,22 @@ button {
 
 <img src="https://i.imgur.com/iWmEdZz.jpeg" width="120" style="border-radius:50%;" />
 
-<p>Vamos aprender arte juntos! 😊</p>
-
 <div id="chat"></div>
 
-<br>
-
 <input id="msg" placeholder="Pergunte sobre arte..." />
+<br>
 <button onclick="enviar()">Enviar</button>
 
-<br><br>
-
-<button onclick="toggleSom()" id="btnSom">🔈 Som: ON</button>
-
 <script>
-// ⏱️ CONTROLE DE TEMPO
-function tempoHoje() {
-  const hoje = new Date().toDateString();
-  let uso = JSON.parse(localStorage.getItem("usoCandinho")) || {};
-
-  if (uso.data !== hoje) {
-    uso = { data: hoje, tempo: 0 };
-  }
-
-  return uso;
-}
-
-function salvarTempo(uso) {
-  localStorage.setItem("usoCandinho", JSON.stringify(uso));
-}
-
-function podeUsar() {
-  const uso = tempoHoje();
-  return uso.tempo < 3600;
-}
-
-setInterval(() => {
-  let uso = tempoHoje();
-  uso.tempo += 5;
-  salvarTempo(uso);
-}, 5000);
-
-// 🔊 SOM
-let somAtivo = true;
-
-function toggleSom() {
-  somAtivo = !somAtivo;
-  document.getElementById("btnSom").innerText =
-    somAtivo ? "🔈 Som: ON" : "🔇 Som: OFF";
-}
-
-function falar(texto) {
-  if (!somAtivo) return;
-
-  const msg = new SpeechSynthesisUtterance(texto);
-  msg.lang = "pt-BR";
-  msg.pitch = 1.4;
-  msg.rate = 0.9;
-  speechSynthesis.speak(msg);
-}
-
-// 🧠 MEMÓRIA
-function salvarHistorico(pergunta, resposta) {
-  let historico = JSON.parse(localStorage.getItem("candinhoHistorico")) || [];
-
-  historico.push({ pergunta, resposta });
-
-  if (historico.length > 10) {
-    historico.shift();
-  }
-
-  localStorage.setItem("candinhoHistorico", JSON.stringify(historico));
-}
-
-function obterHistorico() {
-  return JSON.parse(localStorage.getItem("candinhoHistorico")) || [];
-}
-
-// 🚀 ENVIAR
+// FUNÇÃO PRINCIPAL
 async function enviar() {
   const input = document.getElementById("msg");
   const chat = document.getElementById("chat");
 
-  const mensagem = input.value.trim();
+  const mensagem = input.value;
   if (!mensagem) return;
 
-  if (!podeUsar()) {
-    alert("Tempo esgotado por hoje 😊 volte amanhã!");
-    return;
-  }
-
-  chat.innerHTML += `<p class="user">👦 ${mensagem}</p>`;
-
-  const historico = obterHistorico();
+  chat.innerHTML += `<p>👦 ${mensagem}</p>`;
 
   try {
     const res = await fetch("/api/chat", {
@@ -152,26 +57,21 @@ async function enviar() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ mensagem, historico })
+      body: JSON.stringify({ mensagem })
     });
 
     const data = await res.json();
 
-    chat.innerHTML += `<p class="bot">🎨 ${data.resposta}</p>`;
-
-    falar(data.resposta);
-
-    salvarHistorico(mensagem, data.resposta);
+    chat.innerHTML += `<p>🎨 ${data.resposta}</p>`;
 
   } catch (e) {
-    chat.innerHTML += `<p style="color:red;">Erro de conexão 😢</p>`;
+    chat.innerHTML += `<p style="color:red;">Erro 😢</p>`;
   }
 
-  chat.scrollTop = chat.scrollHeight;
   input.value = "";
 }
 
-// ⌨️ ENTER
+// ENTER FUNCIONANDO
 document.getElementById("msg").addEventListener("keypress", function(e) {
   if (e.key === "Enter") {
     enviar();
