@@ -41,13 +41,8 @@ button {
   cursor: pointer;
 }
 
-.bot {
-  color: blue;
-}
-
-.user {
-  color: green;
-}
+.bot { color: blue; }
+.user { color: green; }
 </style>
 </head>
 
@@ -72,7 +67,6 @@ button {
 
 <script>
 // ⏱️ CONTROLE DE TEMPO
-
 function tempoHoje() {
   const hoje = new Date().toDateString();
   let uso = JSON.parse(localStorage.getItem("usoCandinho")) || {};
@@ -93,14 +87,13 @@ function podeUsar() {
   return uso.tempo < 3600;
 }
 
-// ⏳ contador
 setInterval(() => {
   let uso = tempoHoje();
   uso.tempo += 5;
   salvarTempo(uso);
 }, 5000);
 
-// 🔊 controle de som
+// 🔊 SOM
 let somAtivo = true;
 
 function toggleSom() {
@@ -116,11 +109,27 @@ function falar(texto) {
   msg.lang = "pt-BR";
   msg.pitch = 1.4;
   msg.rate = 0.9;
-
   speechSynthesis.speak(msg);
 }
 
-// 🚀 enviar mensagem
+// 🧠 MEMÓRIA
+function salvarHistorico(pergunta, resposta) {
+  let historico = JSON.parse(localStorage.getItem("candinhoHistorico")) || [];
+
+  historico.push({ pergunta, resposta });
+
+  if (historico.length > 10) {
+    historico.shift();
+  }
+
+  localStorage.setItem("candinhoHistorico", JSON.stringify(historico));
+}
+
+function obterHistorico() {
+  return JSON.parse(localStorage.getItem("candinhoHistorico")) || [];
+}
+
+// 🚀 ENVIAR
 async function enviar() {
   const input = document.getElementById("msg");
   const chat = document.getElementById("chat");
@@ -135,13 +144,15 @@ async function enviar() {
 
   chat.innerHTML += `<p class="user">👦 ${mensagem}</p>`;
 
+  const historico = obterHistorico();
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ mensagem })
+      body: JSON.stringify({ mensagem, historico })
     });
 
     const data = await res.json();
@@ -149,6 +160,8 @@ async function enviar() {
     chat.innerHTML += `<p class="bot">🎨 ${data.resposta}</p>`;
 
     falar(data.resposta);
+
+    salvarHistorico(mensagem, data.resposta);
 
   } catch (e) {
     chat.innerHTML += `<p style="color:red;">Erro de conexão 😢</p>`;
@@ -158,7 +171,7 @@ async function enviar() {
   input.value = "";
 }
 
-// ⌨️ ENTER para enviar
+// ⌨️ ENTER
 document.getElementById("msg").addEventListener("keypress", function(e) {
   if (e.key === "Enter") {
     enviar();
