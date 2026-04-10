@@ -1,9 +1,5 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ erro: "Método não permitido" });
@@ -12,17 +8,22 @@ export default async function handler(req, res) {
   try {
     const { mensagem } = req.body;
 
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({
+        resposta: "Chave da API não encontrada ❌"
+      });
+    }
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const resposta = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `
-Você é Candinho 🎨
-Um assistente infantil que fala apenas sobre arte.
-Use linguagem simples e divertida.
-Nunca responda fora do tema arte.
-`
+          content: "Você é Candinho, um professor infantil de arte."
         },
         {
           role: "user",
@@ -36,7 +37,7 @@ Nunca responda fora do tema arte.
     });
 
   } catch (erro) {
-    console.error("ERRO:", erro);
+    console.error("ERRO REAL:", erro);
 
     return res.status(500).json({
       resposta: "Erro interno 😢",
