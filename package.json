@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "engines": {
-    "node": "24.x"
+    "node": "22.x"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0"
+    "@google/generative-ai": "latest"
   }
 }
