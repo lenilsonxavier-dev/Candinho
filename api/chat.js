@@ -1,64 +1,31 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ resposta: "Método não permitido" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Apenas método POST é permitido' });
   }
 
   const { mensagem } = req.body;
 
+  // 1. Inicializa o Gemini com a sua chave que está na Vercel
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY);
+  
+  // 2. Escolhe o modelo Flash (rápido e gratuito)
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    // Aqui configuramos a personalidade do Candinho!
+    systemInstruction: "Você é o Candinho, um boneco artista e amigável inspirado no pintor Candido Portinari. Sua missão é ensinar arte para crianças de forma lúdica, simples e segura. Use emojis e nunca fale termos complicados ou temas adultos.",
+  });
+
   try {
-    // 🔑 verifica chave
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("API key não encontrada");
-    }
+    const result = await model.generateContent(mensagem);
+    const response = await result.response;
+    const text = response.text();
 
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    const resposta = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `
-Você é Candinho 🎨
-
-Um assistente infantil especialista em ARTE.
-
-Regras:
-- Fale simples
-- Seja divertido
-- Ensine como professor
-- Só fale sobre arte
-- Nunca responda assuntos fora de arte
-
-Se fugir do tema:
-"Vamos falar de arte! 🎨"
-`
-        },
-        {
-          role: "user",
-          content: mensagem
-        }
-      ]
-    });
-
-    const texto =
-      resposta.choices?.[0]?.message?.content ||
-      "Hmm... vamos tentar de novo? 😊";
-
-    return res.status(200).json({
-      resposta: texto
-    });
-
-  } catch (erro) {
-    console.error("Erro IA:", erro.message);
-
-    // 🛟 fallback (SEMPRE responde)
-    return res.status(200).json({
-      resposta: `🎨 Vamos falar de arte! Você disse: "${mensagem}"`
-    });
+    // 3. Devolve a resposta para o seu HTML
+    res.status(200).json({ resposta: text });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ resposta: "Ops! O pincel do Candinho entupiu. Tente de novo!" });
   }
 }
