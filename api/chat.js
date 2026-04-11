@@ -1,9 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-export const config = {
-  runtime: 'edge',
-};
-
 export async function POST(req) {
   try {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -12,15 +6,14 @@ export async function POST(req) {
     const { mensagem } = await req.json();
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Pegamos o modelo sem passar a instrução de sistema aqui (para evitar o erro 400)
+    // CORREÇÃO: Use gemini-pro ou gemini-1.5-pro
     const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash", // Tente mudar para "gemini-1.5-flash" ou "gemini-pro"
-  systemInstruction: {
-    parts: [{ text: "Você é o Candinho..." }],
-  },
-});
-    // Passamos a instrução dentro do "chat" como se fosse a primeira mensagem
-    // Isso é aceito por todas as versões da API e funciona igual!
+      model: "gemini-pro", // ← Mude aqui!
+      systemInstruction: {
+        parts: [{ text: "Você é o Candinho..." }],
+      },
+    });
+    
     const chat = model.startChat({
       history: [
         {
