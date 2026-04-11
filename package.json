@@ -2,9 +2,9 @@
   "name": "candinho",
   "version": "1.0.0",
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.1.0"
+    "@google/generative-ai": "latest"
   }
 }
