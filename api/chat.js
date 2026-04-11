@@ -12,18 +12,18 @@ export async function POST(req) {
     }
 
     const { mensagem } = await req.json();
-
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // CORREÇÃO: O systemInstruction agora é passado como um objeto com 'parts'
+    // O segredo está aqui: o systemInstruction precisa desse formato de objeto {}
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       systemInstruction: {
+        role: "system",
         parts: [{ text: "Você é o Candinho, um assistente infantil amigável e criativo. Seu objetivo é ensinar arte para crianças. REGRAS: 1. Responda APENAS sobre arte (pintura, desenho, cores, artistas famosos). 2. Se a criança perguntar sobre outros temas, diga de forma gentil que você só entende de artes. 3. Use emojis e linguagem simples." }],
       },
     });
 
-    // Gerar o conteúdo
+    // Usamos o generateContent direto para ser mais simples e evitar erros de histórico
     const result = await model.generateContent(mensagem);
     const response = await result.response;
     const text = response.text();
@@ -36,7 +36,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Erro na API:", error);
     return new Response(JSON.stringify({ 
-      resposta: "Ih, deu um errinho! Vamos tentar de novo?", 
+      resposta: "Ih, o Candinho se atrapalhou com os pincéis! Vamos tentar de novo?", 
       detalhe: error.message 
     }), { 
       status: 500,
