@@ -6,6 +6,6 @@
     "node": "22.x"
   },
   "dependencies": {
-    "@google/generative-ai": "latest"
+    "openai": "^4.0.0"
   }
 }
