@@ -13,8 +13,12 @@ export async function POST(req) {
     const genAI = new GoogleGenerativeAI(apiKey);
     
     // Pegamos o modelo sem passar a instrução de sistema aqui (para evitar o erro 400)
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
+    const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+  systemInstruction: {
+    parts: [{ text: "Você é o Candinho, um assistente infantil amigável e criativo. Seu objetivo é ensinar arte para crianças. REGRAS: 1. Responda APENAS sobre arte (pintura, desenho, cores, artistas famosos). 2. Se a criança perguntar sobre outros temas (matemática, política, jogos, etc), diga de forma gentil que você só entende de artes e convide-a a desenhar algo. 3. Use emojis e linguagem simples." }],
+  },
+});
     // Passamos a instrução dentro do "chat" como se fosse a primeira mensagem
     // Isso é aceito por todas as versões da API e funciona igual!
     const chat = model.startChat({
