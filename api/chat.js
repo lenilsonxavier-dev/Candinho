@@ -15,19 +15,16 @@ export async function POST(req) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // CORREÇÃO: Usando 'gemini-1.5-flash' (ou 'gemini-1.5-flash-latest')
-    // A propriedade systemInstruction só funciona nas versões mais recentes da biblioteca
+    // CORREÇÃO: O systemInstruction agora é passado como um objeto com 'parts'
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash", 
-    }, { apiVersion: 'v1beta' }); // Força o uso da v1beta que suporta System Instructions
-
-    // Configurando as instruções de sistema de forma explícita se o modelo acima não aceitar
-    const chat = model.startChat({
-      history: [],
-      systemInstruction: "Você é o Candinho, um assistente infantil amigável e criativo. Seu objetivo é ensinar arte para crianças. REGRAS: 1. Responda APENAS sobre arte (pintura, desenho, cores, artistas famosos). 2. Se a criança perguntar sobre outros temas (matemática, política, jogos, etc), diga de forma gentil que você só entende de artes e convide-a a desenhar algo. 3. Use emojis e linguagem simples.",
+      model: "gemini-1.5-flash",
+      systemInstruction: {
+        parts: [{ text: "Você é o Candinho, um assistente infantil amigável e criativo. Seu objetivo é ensinar arte para crianças. REGRAS: 1. Responda APENAS sobre arte (pintura, desenho, cores, artistas famosos). 2. Se a criança perguntar sobre outros temas, diga de forma gentil que você só entende de artes. 3. Use emojis e linguagem simples." }],
+      },
     });
 
-    const result = await chat.sendMessage(mensagem);
+    // Gerar o conteúdo
+    const result = await model.generateContent(mensagem);
     const response = await result.response;
     const text = response.text();
     
