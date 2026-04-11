@@ -62,7 +62,7 @@ async function enviar() {
 
     const data = await res.json();
 
-    chat.innerHTML += `<p>🎨 ${data.resposta}</p>`;
+    chat.innerHTML += `<p>🎨 ${data.resposta || "Sem resposta 😢"}</p>`;
 
   } catch (e) {
     chat.innerHTML += `<p style="color:red;">Erro 😢</p>`;
