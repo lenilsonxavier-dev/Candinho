@@ -1,17 +1,26 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// REMOVA ou comente a configuração edge se tiver problemas
+// export const config = {
+//   runtime: 'edge',
+// };
+
 export async function POST(req) {
   try {
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) return new Response(JSON.stringify({ resposta: "Erro: API Key não configurada." }), { status: 500 });
+    
+    if (!apiKey) {
+      return new Response(JSON.stringify({ 
+        resposta: "Erro: API Key não configurada no servidor." 
+      }), { status: 500 });
+    }
 
     const { mensagem } = await req.json();
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    // CORREÇÃO: Use gemini-pro ou gemini-1.5-pro
+    // USE gemini-pro (mais estável)
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro", 
-      systemInstruction: {
-        parts: [{ text: "Você é o Candinho..." }],
-      },
+      model: "gemini-pro", // ← CORRIGIDO
     });
     
     const chat = model.startChat({
@@ -36,9 +45,9 @@ export async function POST(req) {
     });
 
   } catch (error) {
-    console.error("Erro na API:", error);
+    console.error("Erro detalhado:", error);
     return new Response(JSON.stringify({ 
-      resposta: "Ih, deu um erro! Vamos tentar de novo?", 
+      resposta: "Erro técnico. Tente novamente.",
       detalhe: error.message 
     }), { status: 500 });
   }
