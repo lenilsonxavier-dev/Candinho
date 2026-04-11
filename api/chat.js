@@ -14,9 +14,9 @@ export async function POST(req) {
     
     // Pegamos o modelo sem passar a instrução de sistema aqui (para evitar o erro 400)
     const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-1.5-flash", // Tente mudar para "gemini-1.5-flash" ou "gemini-pro"
   systemInstruction: {
-    parts: [{ text: "Você é o Candinho, um assistente infantil amigável e criativo. Seu objetivo é ensinar arte para crianças. REGRAS: 1. Responda APENAS sobre arte (pintura, desenho, cores, artistas famosos). 2. Se a criança perguntar sobre outros temas (matemática, política, jogos, etc), diga de forma gentil que você só entende de artes e convide-a a desenhar algo. 3. Use emojis e linguagem simples." }],
+    parts: [{ text: "Você é o Candinho..." }],
   },
 });
     // Passamos a instrução dentro do "chat" como se fosse a primeira mensagem
