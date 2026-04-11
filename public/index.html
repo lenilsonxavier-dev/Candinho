@@ -73,13 +73,12 @@ window.enviar = async function() {
   const mensagem = input.value;
   if (!mensagem) return;
 
-  // Adiciona a mensagem da criança na tela
   chat.innerHTML += `<p class="user">👦 <b>Você:</b> ${mensagem}</p>`;
-  
-  // Limpa o campo de texto logo após o envio
   input.value = "";
-  
-  // Rola o chat para baixo
+  chat.scrollTop = chat.scrollHeight;
+
+  // Adiciona indicador de "digitando"
+  chat.innerHTML += `<p class="bot" id="loading">🤖 <b>Candinho:</b> ✍️ Digitando...</p>`;
   chat.scrollTop = chat.scrollHeight;
 
   try {
@@ -91,19 +90,24 @@ window.enviar = async function() {
       body: JSON.stringify({ mensagem })
     });
 
-    const data = await res.json();
+    // Remove o indicador de loading
+    document.getElementById("loading")?.remove();
 
-    // Adiciona a resposta do Candinho
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
     chat.innerHTML += `<p class="bot">🤖 <b>Candinho:</b> ${data.resposta}</p>`;
     
-    // Rola para baixo novamente para ver a resposta
-    chat.scrollTop = chat.scrollHeight;
   } catch (err) {
-    chat.innerHTML += `<p style="color:red;">⚠️ Ih, deu um erro na conexão!</p>`;
+    document.getElementById("loading")?.remove();
+    chat.innerHTML += `<p style="color:red;">⚠️ Erro: ${err.message}. Tente recarregar a página.</p>`;
+    console.error("Erro detalhado:", err);
   }
-};
   
+  chat.scrollTop = chat.scrollHeight;
+};
 </script>
-
-</body>
+  </body>
 </html>
