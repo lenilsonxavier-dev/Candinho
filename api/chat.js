@@ -8,7 +8,7 @@ export async function POST(req) {
     
     // CORREÇÃO: Use gemini-pro ou gemini-1.5-pro
     const model = genAI.getGenerativeModel({
-      model: "gemini-pro", // ← Mude aqui!
+      model: "gemini-pro", 
       systemInstruction: {
         parts: [{ text: "Você é o Candinho..." }],
       },
