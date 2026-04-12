@@ -1,58 +1,33 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Método não permitido' });
-    }
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Use POST' });
 
-    const { pergunta } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
+    const { pergunta } = req.body;
 
-    // Log para te ajudar a debugar no painel da Vercel
-    console.log("Pergunta recebida:", pergunta);
-
-    if (!API_KEY) {
-        console.error("ERRO: Chave API_KEY não encontrada nas variáveis de ambiente!");
-        return res.status(500).json({ error: "Chave de API não configurada." });
-    }
-
-    const INSTRUCAO = `Você é o Candinho, um especialista em arte para crianças de 10 anos. 
-    Responda de forma direta, educativa e legal. Se o assunto não for arte, cultura ou criatividade, diga que seu pincel só desenha arte. 
-    Use no máximo 3 frases.`;
+    if (!API_KEY) return res.status(500).json({ error: 'Chave API_KEY não configurada na Vercel.' });
 
     try {
-        // Usando o modelo 1.5-flash que é super estável e rápido
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
-
-        const response = await fetch(url, {
+        // Usando o modelo 1.5-flash (mais estável que o 2.0 experimental)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                contents: [{ parts: [{ text: pergunta }] }],
                 system_instruction: { 
-                    parts: [{ text: INSTRUCAO }] 
-                },
-                contents: [
-                    { parts: [{ text: pergunta }] }
-                ],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 300
+                    parts: [{ text: "Você é o Candinho, um especialista em arte para crianças. Responda de forma curta e amigável." }] 
                 }
             })
         });
 
         const data = await response.json();
 
-        // Log da resposta bruta do Google para você ver nos logs da Vercel se algo der errado
-        console.log("Resposta do Google:", JSON.stringify(data));
-
-        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
-            return res.status(200).json(data);
-        } else {
-            console.error("Resposta inválida do Google:", data);
-            return res.status(500).json({ error: "O Google não devolveu uma resposta válida.", detalhe: data });
+        // Se o Google retornar erro (ex: chave inválida), enviamos o erro para o chat
+        if (data.error) {
+            return res.status(500).json({ error: data.error.message });
         }
 
-    } catch (error) {
-        console.error("Erro na função API:", error);
-        return res.status(500).json({ error: "Erro interno no servidor." });
+        return res.status(200).json(data);
+    } catch (e) {
+        return res.status(500).json({ error: 'Erro ao conectar com o Google.' });
     }
 }
