@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candinho - Assistente para crianças de 10 anos</title>
+    <title>Candinho - Especialista em Arte</title>
     <style>
         * {
             box-sizing: border-box;
@@ -15,6 +15,7 @@
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            color: white;
         }
         
         .container {
@@ -43,12 +44,12 @@
             background: #fff;
             padding: 5px;
             box-shadow: 0 0 0 3px #ffd700;
+            overflow: hidden;
         }
         
         .avatar img {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
             object-fit: cover;
         }
         
@@ -70,10 +71,12 @@
             height: 450px;
             overflow-y: auto;
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
         }
         
         .mensagem {
-            margin: 15px 0;
+            margin: 10px 0;
             padding: 12px 18px;
             border-radius: 18px;
             max-width: 85%;
@@ -85,14 +88,14 @@
         .usuario {
             background: #e94560;
             color: white;
-            margin-left: auto;
-            text-align: right;
+            align-self: flex-end;
             border-bottom-right-radius: 5px;
         }
         
         .candinho {
             background: #533483;
             color: white;
+            align-self: flex-start;
             border-bottom-left-radius: 5px;
         }
         
@@ -109,6 +112,7 @@
             font-size: 15px;
             font-family: inherit;
             background: #f0f0f0;
+            color: #333;
         }
         
         button {
@@ -120,6 +124,7 @@
             font-size: 15px;
             cursor: pointer;
             font-weight: bold;
+            transition: background 0.3s;
         }
         
         button:hover {
@@ -132,14 +137,10 @@
             margin-top: 15px;
             color: #aaa;
         }
-        
-        @keyframes blink {
-            0% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
+
         .pensando {
-            animation: blink 1s infinite;
+            font-style: italic;
+            opacity: 0.8;
         }
     </style>
 </head>
@@ -147,102 +148,87 @@
     <div class="container">
         <div class="header">
             <div class="avatar">
+                <!-- Imagem do Candinho -->
                 <img src="https://i.imgur.com/iWmEdZz.jpg" alt="Avatar do Candinho">
             </div>
             <div class="title">
-                <h1>Candinho</h1>
-                <p>Assistente para crianças de 10 anos</p>
+                <h1>Candinho 🎨</h1>
+                <p>Especialista em Arte e Cultura</p>
             </div>
         </div>
         
         <div class="chat-area" id="chat">
             <div class="mensagem candinho">
-                E aí, beleza? Sou o Candinho. Pode perguntar qualquer coisa.
+                E aí! Sou o Candinho. Vamos falar de arte? Posso te contar sobre quadros famosos, museus ou até te dar ideias para desenhar! 🖼️
             </div>
         </div>
         
         <div class="input-area">
-            <input type="text" id="pergunta" placeholder="Digite sua mensagem..." 
+            <input type="text" id="pergunta" placeholder="Pergunte algo sobre arte..." 
                    onkeypress="if(event.key === 'Enter') enviarMensagem()">
             <button onclick="enviarMensagem()">Enviar</button>
         </div>
         <div class="status">
-            🔒 Seguro para crianças de 10 anos | Linguagem direta
+            🔒 Seguro | Foco em Arte e Educação
         </div>
     </div>
 
     <script>
-        // SUA CHAVE DO GEMINI AQUI (grátis em aistudio.google.com)
-        const API_KEY = "AIzaSyCG2LNKnOPUkvHuAMlT3d8wpMuWReuZNIw";
-        
-        const INSTRUCAO = `Você é o 'Candinho', assistente para crianças de 10 anos.
-        
-REGRAS:
-- Use linguagem normal de pré-adolescente, SEM diminutivos
-- Seja legal e direto, sem tratar a criança como bebê
-- Máximo 1 emoji por resposta
-- Respostas curtas (máximo 2 frases)
-- Se for perigoso: "Melhor chamar um adulto para ajudar"
-- Termine com "--- Candinho"`;
-        
         async function enviarMensagem() {
             const input = document.getElementById('pergunta');
-            const pergunta = input.value.trim();
+            const texto = input.value.trim();
             
-            if (!pergunta) return;
+            if (!texto) return;
             
             const chatDiv = document.getElementById('chat');
             
-            // Mostra mensagem do usuário
-            const msgUsuario = document.createElement('div');
-            msgUsuario.className = 'mensagem usuario';
-            msgUsuario.textContent = pergunta;
-            chatDiv.appendChild(msgUsuario);
-            
+            // Adiciona mensagem do usuário na tela
+            adicionarMensagem(texto, 'usuario');
             input.value = '';
-            chatDiv.scrollTop = chatDiv.scrollHeight;
             
-            // Indicador de digitação
-            const pensando = document.createElement('div');
-            pensando.className = 'mensagem candinho pensando';
-            pensando.textContent = 'Candinho está digitando...';
-            chatDiv.appendChild(pensando);
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+            // Adiciona indicador de que ele está pensando
+            const pensandoElemento = adicionarMensagem('Candinho está pesquisando...', 'candinho pensando');
             
             try {
-                const resposta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${API_KEY}`, {
+                // CHAMADA PARA A SUA API DA VERCEL (Segura)
+                const resposta = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        system_instruction: { parts: [{ text: INSTRUCAO }] },
-                        contents: [{ parts: [{ text: pergunta }] }],
-                        generationConfig: { temperature: 0.8, maxOutputTokens: 120 }
-                    })
+                    body: JSON.stringify({ pergunta: texto })
                 });
                 
                 const dados = await resposta.json();
-                chatDiv.removeChild(pensando);
                 
-                let textoResposta = "Não entendi, tenta de novo. --- Candinho";
-                if (dados.candidates && dados.candidates[0]) {
+                // Remove o "pensando..."
+                chatDiv.removeChild(pensandoElemento);
+                
+                let textoResposta = "";
+
+                if (dados.candidates && dados.candidates[0].content) {
                     textoResposta = dados.candidates[0].content.parts[0].text;
+                } else {
+                    textoResposta = "Puxa, me enrolei aqui com os pincéis. Pode perguntar de novo?";
                 }
                 
-                const msgCandinho = document.createElement('div');
-                msgCandinho.className = 'mensagem candinho';
-                msgCandinho.textContent = textoResposta;
-                chatDiv.appendChild(msgCandinho);
+                adicionarMensagem(textoResposta, 'candinho');
                 
             } catch (erro) {
-                chatDiv.removeChild(pensando);
-                const msgErro = document.createElement('div');
-                msgErro.className = 'mensagem candinho';
-                msgErro.textContent = 'Erro de conexão. Tenta de novo. --- Candinho';
-                chatDiv.appendChild(msgErro);
+                if(pensandoElemento) chatDiv.removeChild(pensandoElemento);
+                adicionarMensagem('Ih, deu erro na conexão. Tenta de novo!', 'candinho');
                 console.error(erro);
             }
+        }
+
+        function adicionarMensagem(texto, classe) {
+            const chatDiv = document.getElementById('chat');
+            const msg = document.createElement('div');
+            msg.className = `mensagem ${classe}`;
+            msg.textContent = texto;
+            chatDiv.appendChild(msg);
             
+            // Rola o chat para o fim
             chatDiv.scrollTop = chatDiv.scrollHeight;
+            return msg;
         }
     </script>
 </body>
