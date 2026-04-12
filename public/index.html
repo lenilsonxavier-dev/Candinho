@@ -174,50 +174,38 @@
     </div>
 
     <script>
-        async function enviarMensagem() {
-            const input = document.getElementById('pergunta');
-            const texto = input.value.trim();
-            
-            if (!texto) return;
-            
-            const chatDiv = document.getElementById('chat');
-            
-            // Adiciona mensagem do usuário na tela
-            adicionarMensagem(texto, 'usuario');
-            input.value = '';
-            
-            // Adiciona indicador de que ele está pensando
-            const pensandoElemento = adicionarMensagem('Candinho está pesquisando...', 'candinho pensando');
-            
-            try {
-                // CHAMADA PARA A SUA API DA VERCEL (Segura)
-                const resposta = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pergunta: texto })
-                });
-                
-                const dados = await resposta.json();
-                
-                // Remove o "pensando..."
-                chatDiv.removeChild(pensandoElemento);
-                
-                let textoResposta = "";
+       async function enviarMensagem() {
+    const input = document.getElementById('pergunta');
+    const texto = input.value.trim();
+    if (!texto) return;
 
-                if (dados.candidates && dados.candidates[0].content) {
-                    textoResposta = dados.candidates[0].content.parts[0].text;
-                } else {
-                    textoResposta = "Puxa, me enrolei aqui com os pincéis. Pode perguntar de novo?";
-                }
-                
-                adicionarMensagem(textoResposta, 'candinho');
-                
-            } catch (erro) {
-                if(pensandoElemento) chatDiv.removeChild(pensandoElemento);
-                adicionarMensagem('Ih, deu erro na conexão. Tenta de novo!', 'candinho');
-                console.error(erro);
-            }
+    adicionarMensagem(texto, 'usuario');
+    input.value = '';
+
+    const chatDiv = document.getElementById('chat');
+    const pensando = adicionarMensagem('Candinho está pensando...', 'candinho');
+
+    try {
+        const resposta = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pergunta: texto })
+        });
+
+        const dados = await resposta.json();
+        chatDiv.removeChild(pensando);
+
+        if (dados.error) {
+            // ISSO VAI MOSTRAR O ERRO REAL NA TELA
+            adicionarMensagem("ERRO: " + dados.error, 'candinho');
+        } else if (dados.candidates && dados.candidates[0].content) {
+            adicionarMensagem(dados.candidates[0].content.parts[0].text, 'candinho');
         }
+    } catch (erro) {
+        chatDiv.removeChild(pensando);
+        adicionarMensagem("Erro de rede. Verifique sua conexão.", 'candinho');
+    }
+}
 
         function adicionarMensagem(texto, classe) {
             const chatDiv = document.getElementById('chat');
