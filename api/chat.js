@@ -8,22 +8,17 @@ export default async function handler(req, res) {
 
     const INSTRUCAO = `Você é o Candinho, um mentor de cultura e arte para crianças de 10 anos.
     
-    PERSONA E TOM:
-    - Seja um amigo encorajador e empático. Se a criança parecer triste ou confusa, valide o sentimento dela.
-    - Use linguagem clara, de pré-adolescente, sem tratar a criança como bebê.
-    - Se a conversa envolver perigo, tristeza profunda ou temas adultos complexos, diga: "Isso é importante, que tal chamar um adulto de confiança para a gente conversar sobre isso?"
-    
-    CONHECIMENTO MULTIDISCIPLINAR (Sempre conectando à Arte):
-    - PORTUGUÊS: Ajude a interpretar o "texto" das obras e incentive o bom vocabulário.
-    - INGLÊS: Introduza termos em inglês naturalmente (ex: "The Starry Night significa A Noite Estrelada").
-    - MATEMÁTICA: Explique formas geométricas, simetria e medidas usando exemplos de arquitetura e pintura.
-    - CULTURA GERAL: Conecte a história do mundo com o que os artistas viviam.
+    COMPORTAMENTO:
+    - Seja um amigo empático, encorajador e multidisciplinar.
+    - Conecte Arte com Português, Inglês, Matemática e Emoções.
+    - Se a criança estiver triste ou falar de algo sério, sugira pedir ajuda a um adulto.
+    - NUNCA deixe uma frase incompleta. É melhor falar menos e terminar a ideia.
+    - Se falar de danças culturais como o Cavalo Marinho, explique os elementos (dança, música, poesia).
 
-    REGRAS DE RESPOSTA:
-    - Máximo 3 ou 4 frases para não cansar.
+    REGRAS DE FORMATAÇÃO:
+    - Máximo de 2 parágrafos pequenos.
     - Use no máximo 2 emojis.
-    - Termine com uma pergunta instigante ou um incentivo.
-    - Baseie-se em fontes seguras como Wikipédia e Google Arts & Culture (conhecimento interno).`;
+    - Termine sempre a frase com ponto final.`;
 
     try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
@@ -35,8 +30,11 @@ export default async function handler(req, res) {
                 system_instruction: { parts: [{ text: INSTRUCAO }] },
                 contents: [{ parts: [{ text: pergunta }] }],
                 generationConfig: { 
-                    temperature: 0.8, // Um pouco mais alto para ser mais criativo e humano
-                    maxOutputTokens: 600 
+                    temperature: 0.8, 
+                    // AUMENTAMOS AQUI: de 300 para 1000 para evitar cortes
+                    maxOutputTokens: 1000, 
+                    topP: 0.95,
+                    topK: 40
                 }
             })
         });
@@ -45,11 +43,15 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             return res.status(response.status).json({ 
-                error: "O Candinho está fazendo um lanche! Volto em 1 minuto. 🍎" 
+                error: "O Candinho está organizando os pincéis. Tente de novo em instantes!" 
             });
         }
 
-        return res.status(200).json(data);
+        if (data.candidates && data.candidates[0].content) {
+            return res.status(200).json(data);
+        } else {
+            return res.status(500).json({ error: "O Candinho se perdeu na explicação. Tente de novo!" });
+        }
 
     } catch (e) {
         return res.status(500).json({ error: 'Erro de conexão.' });
