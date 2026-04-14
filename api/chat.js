@@ -6,12 +6,18 @@ export default async function handler(req, res) {
 
     if (!API_KEY) return res.status(500).json({ error: 'Chave não encontrada.' });
 
-    const INSTRUCAO = `Você é o Candinho, tutor de arte para crianças de 10 anos.
-    Responda em português, de forma amigável e curta (max 3 frases).
-    Se não for sobre arte ou cultura, diga que seu pincel só desenha arte.`;
+    // INSTRUÇÃO ESPECIALIZADA: Simulamos o acesso a fontes confiáveis
+    const INSTRUCAO = `Você é o Candinho, um tutor de arte para crianças de 10 anos.
+    Sua base de conhecimento é estritamente focada em: Wikipédia, Google Arts & Culture, Livros de História da Arte e arquivos de museus como Louvre e MASP.
+    
+    REGRAS:
+    1. Responda apenas sobre arte, pintores, esculturas e cultura.
+    2. Use linguagem simples, mas cite curiosidades históricas reais.
+    3. Sempre que falar de um quadro, se possível, sugira que a criança procure o título no "Google Arts & Culture" para ver em alta definição.
+    4. Responda em no máximo 3 frases.
+    5. Se pedirem algo fora de arte, diga: "Meu pincel só desenha história da arte! Vamos falar sobre um pintor?"`;
 
     try {
-        // USANDO O ALIAS "LATEST" PARA PEGAR O MELHOR SERVIDOR DISPONÍVEL
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`;
 
         const response = await fetch(url, {
@@ -21,8 +27,8 @@ export default async function handler(req, res) {
                 system_instruction: { parts: [{ text: INSTRUCAO }] },
                 contents: [{ parts: [{ text: pergunta }] }],
                 generationConfig: { 
-                    temperature: 0.7, 
-                    maxOutputTokens: 400 
+                    temperature: 0.6, // Menor temperatura para ser mais preciso nos fatos históricos
+                    maxOutputTokens: 500 
                 }
             })
         });
@@ -30,18 +36,14 @@ export default async function handler(req, res) {
         const data = await response.json();
 
         if (!response.ok) {
-            // Se o erro for "High Demand", vamos dar uma resposta personalizada
-            if (response.status === 503 || data.error?.message?.includes('demand')) {
-                return res.status(200).json({ 
-                    candidates: [{ content: { parts: [{ text: "O museu está muito lotado agora! 🏛️ Espere um minutinho e me pergunte de novo?" }] } }]
-                });
-            }
-            return res.status(response.status).json({ error: data.error?.message });
+            return res.status(response.status).json({ 
+                error: "O museu está fechado para limpeza! (Erro de Quota/Demanda). Tente em 1 minuto." 
+            });
         }
 
         return res.status(200).json(data);
 
     } catch (e) {
-        return res.status(500).json({ error: 'Erro de conexão com o museu.' });
+        return res.status(500).json({ error: 'Erro de conexão com o servidor.' });
     }
 }
