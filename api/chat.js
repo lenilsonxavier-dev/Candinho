@@ -4,11 +4,13 @@ export default async function handler(req, res) {
     const API_KEY = process.env.GEMINI_API_KEY;
     const { pergunta } = req.body;
 
-    if (!API_KEY) return res.status(500).json({ error: 'Chave não encontrada.' });
+    // ESTRATÉGIA DE LONGO PRAZO:
+    // Em vez de gemini-3.1-lite-preview (que é instável e muda toda hora),
+    // usamos o alias estável.
+    const MODELO = "gemini-1.5-flash"; 
 
     try {
-        // MUDANÇA PARA O MODELO ESTÁVEL (GA) E ROTA V1
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/${MODELO}:generateContent?key=${API_KEY}`;
 
         const response = await fetch(url, {
             method: 'POST',
@@ -16,7 +18,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 contents: [{
                     role: "user",
-                    parts: [{ text: `Você é o Candinho, um tutor de arte para crianças. Responda de forma curta e amigável apenas sobre arte e cultura.\n\nPergunta: ${pergunta}` }]
+                    parts: [{ text: `Instrução: Você é o Candinho, tutor de arte para crianças. Responda curto e apenas sobre arte.\n\nPergunta: ${pergunta}` }]
                 }],
                 generationConfig: {
                     temperature: 0.7,
@@ -27,18 +29,14 @@ export default async function handler(req, res) {
 
         const data = await response.json();
 
-        // Se o Google der erro, ele vai nos avisar
         if (data.error) {
-            return res.status(500).json({ error: `O Google está ocupado: ${data.error.message}` });
+            // Se o modelo estiver lotado, tentamos avisar de forma amigável
+            return res.status(500).json({ error: "O Candinho está guardando os pincéis. Tente em 1 minuto!" });
         }
 
-        if (data.candidates && data.candidates[0].content) {
-            return res.status(200).json(data);
-        } else {
-            return res.status(500).json({ error: "O Candinho ficou sem ideias agora. Tente novamente." });
-        }
+        return res.status(200).json(data);
 
     } catch (e) {
-        return res.status(500).json({ error: 'Erro de conexão com o museu do Candinho.' });
+        return res.status(500).json({ error: 'Erro de conexão.' });
     }
 }
