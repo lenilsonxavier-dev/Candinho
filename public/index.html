@@ -3,221 +3,544 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candinho - Especialista em Arte</title>
+    <title>Candinho - IA de Arte</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body {
-            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            margin: 0;
-            padding: 20px;
+            color: white; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center;
             min-height: 100vh;
-            color: white;
         }
         
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: #0f3460;
+        .container { 
+            width: 100%; 
+            max-width: 800px; 
+            background: rgba(22, 33, 62, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px; 
+            padding: 25px; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        
+        .header { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            margin-bottom: 20px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px solid #e94560; 
+        }
+        
+        .avatar { 
+            width: 70px; 
+            height: 70px; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 3px solid #ffd700;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .title h1 { font-size: 1.8em; margin-bottom: 5px; }
+        .title small { font-size: 0.8em; color: #ffd700; }
+        
+        .badge {
+            display: inline-block;
+            background: #e94560;
+            padding: 2px 8px;
             border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            font-size: 10px;
+            margin-left: 10px;
+            vertical-align: middle;
         }
         
-        .header {
+        #chat { 
+            height: 400px; 
+            overflow-y: auto; 
+            background: rgba(15, 52, 96, 0.6);
+            padding: 15px; 
+            border-radius: 15px; 
+            margin-bottom: 15px; 
+            border: 1px solid #1b262c;
+        }
+        
+        #status { 
+            font-size: 13px; 
+            color: #ffd700; 
+            margin-bottom: 10px; 
+            font-weight: bold;
             display: flex;
             align-items: center;
-            gap: 20px;
-            background: #e94560;
-            padding: 15px 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
         
-        .avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: #fff;
-            padding: 5px;
-            box-shadow: 0 0 0 3px #ffd700;
-            overflow: hidden;
-        }
-        
-        .avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .title h1 {
-            margin: 0;
-            color: white;
-            font-size: 28px;
-        }
-        
-        .title p {
-            margin: 5px 0 0;
-            color: #ffe0e0;
-        }
-        
-        .chat-area {
-            background: #1a1a2e;
-            border-radius: 15px;
-            padding: 20px;
-            height: 450px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .mensagem {
-            margin: 10px 0;
-            padding: 12px 18px;
-            border-radius: 18px;
-            max-width: 85%;
-            word-wrap: break-word;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-        
-        .usuario {
-            background: #e94560;
-            color: white;
-            align-self: flex-end;
-            border-bottom-right-radius: 5px;
-        }
-        
-        .candinho {
+        .mode-indicator {
             background: #533483;
-            color: white;
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
         }
         
-        .input-area {
-            display: flex;
-            gap: 12px;
+        .mode-indicator.cloud { background: #e94560; }
+        .mode-indicator.local { background: #4ecdc4; }
+        
+        .progress-container { 
+            width: 100%; 
+            background: #333; 
+            height: 6px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+            overflow: hidden; 
         }
         
-        input {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 25px;
-            font-size: 15px;
-            font-family: inherit;
-            background: #f0f0f0;
-            color: #333;
+        .progress-bar { 
+            width: 0%; 
+            height: 100%; 
+            background: linear-gradient(90deg, #e94560, #ffd700); 
+            transition: width 0.3s; 
         }
         
-        button {
-            background: #e94560;
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 25px;
-            font-size: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
-        }
-        
-        button:hover {
-            background: #d63454;
-        }
-        
-        .status {
-            font-size: 12px;
-            text-align: center;
+        .input-area { 
+            display: flex; 
+            gap: 10px; 
             margin-top: 15px;
-            color: #aaa;
         }
-
-        .pensando {
-            font-style: italic;
-            opacity: 0.8;
+        
+        input { 
+            flex: 1; 
+            padding: 14px 20px; 
+            border-radius: 30px; 
+            border: none; 
+            font-size: 16px; 
+            outline: none;
+            background: #0f3460;
+            color: white;
         }
+        
+        input::placeholder { color: #aaa; }
+        
+        button { 
+            padding: 14px 25px; 
+            border-radius: 30px; 
+            background: #e94560; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: 0.3s; 
+        }
+        
+        button:hover:not(:disabled) { 
+            background: #ff6b8a; 
+            transform: scale(1.02);
+        }
+        
+        button:disabled { background: #555; cursor: not-allowed; }
+        
+        .msg { 
+            margin-bottom: 15px; 
+            padding: 12px; 
+            border-radius: 15px; 
+            display: flex; 
+            gap: 12px; 
+            align-items: flex-start;
+        }
+        
+        .user-msg { 
+            background: #1b6ca8; 
+            margin-left: 20%;
+            border-radius: 15px 15px 5px 15px;
+        }
+        
+        .ai-msg { 
+            background: #533483; 
+            margin-right: 20%;
+            border-radius: 15px 15px 15px 5px;
+        }
+        
+        .msg-avatar { 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            object-fit: cover;
+            border: 2px solid #ffd700;
+        }
+        
+        .msg-content { flex: 1; }
+        .msg-content b { display: block; margin-bottom: 5px; color: #ffd700; }
+        
+        .typing {
+            display: flex;
+            gap: 4px;
+            padding: 5px 0;
+        }
+        .typing span {
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: wave 1.3s infinite;
+        }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .error { color: #ff6b6b; }
+        .success { color: #4ecdc4; }
+        .cloud-badge { font-size: 10px; background: #e94560; padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
+        
+        #chat::-webkit-scrollbar { width: 6px; }
+        #chat::-webkit-scrollbar-track { background: #1b262c; border-radius: 10px; }
+        #chat::-webkit-scrollbar-thumb { background: #e94560; border-radius: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="avatar">
-                <!-- Imagem do Candinho -->
-                <img src="https://i.imgur.com/iWmEdZz.jpg" alt="Avatar do Candinho">
-            </div>
-            <div class="title">
-                <h1>Candinho 🎨</h1>
-                <p>Especialista em Arte e Cultura</p>
-            </div>
+
+<div class="container">
+    <div class="header">
+        <img src="https://i.imgur.com/fnMYS0Z.png" alt="Candinho" class="avatar">
+        <div class="title">
+            <h1>Candinho Híbrido 🎨</h1>
+            <small>Mentor de Arte - IA Local + Nuvem</small>
         </div>
-        
-        <div class="chat-area" id="chat">
-            <div class="mensagem candinho">
-                E aí! Sou o Candinho. Vamos falar de arte? Posso te contar sobre quadros famosos, museus ou até te dar ideias para desenhar! 🖼️
+    </div>
+    
+    <div id="status">
+        <span>⚙️ Inicializando cérebro digital...</span>
+        <span id="modeBadge" class="mode-indicator">carregando</span>
+    </div>
+    <div class="progress-container">
+        <div id="progress" class="progress-bar"></div>
+    </div>
+
+    <div id="chat">
+        <div class="msg ai-msg">
+            <img src="https://i.imgur.com/fnMYS0Z.png" alt="Candinho" class="msg-avatar">
+            <div class="msg-content">
+                <b>Candinho</b>
+                Oi! Eu sou o Candinho, seu amigo artista! 🎨<br><br>
+                Eu tenho um cérebro no seu computador (bem rapidinho) e um super cérebro na nuvem (para perguntas mais difíceis).<br><br>
+                Pode me perguntar sobre arte, artistas, pinturas, desenhos, esculturas... o que você quiser! ✨
             </div>
-        </div>
-        
-        <div class="input-area">
-            <input type="text" id="pergunta" placeholder="Pergunte algo sobre arte..." 
-                   onkeypress="if(event.key === 'Enter') enviarMensagem()">
-            <button onclick="enviarMensagem()">Enviar</button>
-        </div>
-        <div class="status">
-            🔒 Seguro | Foco em Arte e Educação
         </div>
     </div>
 
-    <script>
-       async function enviarMensagem() {
-    const input = document.getElementById('pergunta');
-    const texto = input.value.trim();
-    if (!texto) return;
+    <div class="input-area">
+        <input type="text" id="pergunta" placeholder="Aguarde o carregamento..." disabled>
+        <button id="btnEnviar" onclick="enviarMensagem()" disabled>Enviar 📤</button>
+    </div>
+</div>
 
-    adicionarMensagem(texto, 'usuario');
-    input.value = '';
-
-    const chatDiv = document.getElementById('chat');
-    const pensando = adicionarMensagem('Candinho está pensando...', 'candinho');
-
-    try {
-        const resposta = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pergunta: texto })
-        });
-
-        const dados = await resposta.json();
-        chatDiv.removeChild(pensando);
-
-        if (dados.error) {
-            // ISSO VAI MOSTRAR O ERRO REAL NA TELA
-            adicionarMensagem("ERRO: " + dados.error, 'candinho');
-        } else if (dados.candidates && dados.candidates[0].content) {
-            adicionarMensagem(dados.candidates[0].content.parts[0].text, 'candinho');
+<script type="importmap">
+    {
+        "imports": {
+            "@mlc-ai/web-llm": "https://esm.run/@mlc-ai/web-llm@0.2.56"
         }
-    } catch (erro) {
-        chatDiv.removeChild(pensando);
-        adicionarMensagem("Erro de rede. Verifique sua conexão.", 'candinho');
     }
-}
+</script>
 
-        function adicionarMensagem(texto, classe) {
-            const chatDiv = document.getElementById('chat');
-            const msg = document.createElement('div');
-            msg.className = `mensagem ${classe}`;
-            msg.textContent = texto;
-            chatDiv.appendChild(msg);
+<script type="module">
+    import { CreateMLCEngine } from "@mlc-ai/web-llm";
+
+    // --- DOM Elements ---
+    const statusDiv = document.getElementById("status");
+    const modeBadge = document.getElementById("modeBadge");
+    const progressDiv = document.getElementById("progress");
+    const chatDiv = document.getElementById("chat");
+    const input = document.getElementById("pergunta");
+    const btn = document.getElementById("btnEnviar");
+
+    // --- Configuração ---
+    const selectedModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
+    let engine = null;
+    let isCloudAvailable = true;  // Será testado ao iniciar
+
+    // --- Base de conhecimento local ---
+    const conhecimentoLocal = {
+        saudacoes: ["oi", "olá", "opa", "e aí", "bom dia", "boa tarde", "boa noite"],
+        artistas: ["van gogh", "monalisa", "da vinci", "tarsila", "portinari", "picasso", "frida"],
+        tecnicas: ["aquarela", "óleo", "desenho", "pintura", "escultura", "gravura"]
+    };
+
+    // --- Detectar complexidade da pergunta ---
+    function detectarComplexidade(pergunta) {
+        const p = pergunta.toLowerCase();
+        const palavras = p.split(' ').length;
+        
+        // Perguntas muito simples - modo local
+        if (palavras <= 3) return "local";
+        
+        // Saudações - modo local
+        if (conhecimentoLocal.saudacoes.some(s => p.includes(s))) return "local";
+        
+        // Perguntas sobre artistas conhecidos - modo local
+        if (conhecimentoLocal.artistas.some(a => p.includes(a))) return "local";
+        
+        // Perguntas complexas - modo nuvem
+        const termosComplexos = [
+            "compare", "diferença", "semelhança", "análise", "contexto histórico",
+            "influência", "movimento artístico", "por que", "explique detalhadamente",
+            "qual a importância", "o que significa", "história completa"
+        ];
+        
+        if (termosComplexos.some(t => p.includes(t))) return "cloud";
+        
+        // Perguntas longas - modo nuvem
+        if (palavras > 15) return "cloud";
+        
+        // Padrão: local
+        return "local";
+    }
+
+    // --- Resposta via API na nuvem (backend seguro) ---
+    async function respostaCloud(pergunta) {
+        try {
+            modeBadge.textContent = "☁️ nuvem";
+            modeBadge.className = "mode-indicator cloud";
             
-            // Rola o chat para o fim
-            chatDiv.scrollTop = chatDiv.scrollHeight;
-            return msg;
+            const response = await fetch('/api/groq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [
+                        { 
+                            role: "system", 
+                            content: `Você é o Candinho, um mentor de arte super animado para crianças de 10 anos.
+                            
+REGRAS IMPORTANTES:
+- Responda em português do Brasil, NUNCA use linguagem neutra (nada de "todes", "amigues", etc.)
+- Use "meninos e meninas", "crianças", "amigos", "pessoas"
+- Seja alegre, divertido e use emojis de arte 🎨 ✨ 🖌️
+- Responda de forma clara e educativa, máximo 4 frases
+- SEMPRE incentive a criatividade e a curiosidade
+- Se não souber algo, diga: "Não sei, mas vamos pesquisar juntos!"`
+                        },
+                        { role: "user", content: pergunta }
+                    ],
+                    max_tokens: 200,
+                    temperature: 0.7
+                })
+            });
+            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const data = await response.json();
+            return data.choices[0].message.content;
+            
+        } catch (error) {
+            console.error("Erro na nuvem:", error);
+            modeBadge.textContent = "⚠️ nuvem falhou";
+            return null;
         }
-    </script>
+    }
+
+    // --- Resposta via IA Local ---
+    async function respostaLocal(pergunta) {
+        if (!engine) return null;
+        
+        modeBadge.textContent = "💻 local";
+        modeBadge.className = "mode-indicator local";
+        
+        try {
+            const reply = await engine.chat.completions.create({
+                messages: [
+                    { 
+                        role: "system", 
+                        content: `Você é o Candinho, mentor de arte para crianças de 10 anos.
+                        
+REGRAS:
+- Responda em português do Brasil, sem linguagem neutra
+- Use "amigos", "pessoas", "meninos e meninas"
+- Seja alegre, use emojis 🎨
+- Máximo 2 frases curtas
+- Se não souber, diga: "Não sei, vamos descobrir!"`
+                    },
+                    { role: "user", content: pergunta }
+                ],
+                max_tokens: 100,
+                temperature: 0.7
+            });
+            
+            return reply.choices[0].message.content;
+            
+        } catch (error) {
+            console.error("Erro local:", error);
+            return null;
+        }
+    }
+
+    // --- Função principal de resposta ---
+    async function getResposta(pergunta) {
+        const complexidade = detectarComplexidade(pergunta);
+        console.log(`[Complexidade: ${complexidade}] Pergunta: ${pergunta}`);
+        
+        // Tentar local primeiro se for adequado
+        if (complexidade === "local" && engine) {
+            const resposta = await respostaLocal(pergunta);
+            if (resposta) return resposta;
+        }
+        
+        // Se a pergunta é complexa OU o local falhou, tenta nuvem
+        if (isCloudAvailable) {
+            const resposta = await respostaCloud(pergunta);
+            if (resposta) return resposta;
+        }
+        
+        // Fallback: resposta manual se tudo falhar
+        return "Olá! Sou o Candinho e adoro arte! 🎨 Pode repetir sua pergunta? Quero muito te ajudar!";
+    }
+
+    // --- Inicialização da IA Local ---
+    async function initLocal() {
+        if (!navigator.gpu) {
+            statusDiv.innerHTML = "<span class='error'>❌ WebGPU não suportado! Use Chrome ou Edge atualizado.</span>";
+            return false;
+        }
+
+        try {
+            statusDiv.innerHTML = "<span>📥 Baixando cérebro local (1.5GB na primeira vez)...</span>";
+            progressDiv.style.width = "0%";
+            
+            engine = await CreateMLCEngine(selectedModel, { 
+                initProgressCallback: (progress) => {
+                    const statusText = progress.text;
+                    if (progress.progress) {
+                        progressDiv.style.width = (progress.progress * 100) + "%";
+                    }
+                    if (statusText.includes("Finish")) {
+                        statusDiv.innerHTML = "<span>✅ Cérebro local carregado!</span>";
+                    }
+                }
+            });
+            
+            return true;
+            
+        } catch (e) {
+            console.error("Erro ao carregar IA local:", e);
+            statusDiv.innerHTML = "<span class='error'>⚠️ IA local não disponível, usando apenas nuvem</span>";
+            return false;
+        }
+    }
+
+    // --- Testar disponibilidade da nuvem ---
+    async function testCloud() {
+        try {
+            const response = await fetch('/api/groq', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [{ role: "user", content: "Diga 'ok'" }],
+                    max_tokens: 5
+                })
+            });
+            isCloudAvailable = response.ok;
+        } catch (e) {
+            isCloudAvailable = false;
+        }
+        
+        if (!isCloudAvailable) {
+            statusDiv.innerHTML += "<span class='error'> ⚠️ Nuvem indisponível, usando só local</span>";
+        }
+    }
+
+    // --- Enviar mensagem ---
+    window.enviarMensagem = async function() {
+        const pergunta = input.value.trim();
+        if (!pergunta) return;
+
+        // Mostrar pergunta do usuário
+        chatDiv.innerHTML += `
+            <div class="msg user-msg">
+                <div class="msg-content">
+                    <b>Você</b>
+                    ${escapeHtml(pergunta)}
+                </div>
+            </div>`;
+        input.value = "";
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+
+        // Indicador de pensando
+        const pensandoId = "p-" + Date.now();
+        chatDiv.innerHTML += `
+            <div class="msg ai-msg" id="${pensandoId}">
+                <img src="https://i.imgur.com/fnMYS0Z.png" class="msg-avatar">
+                <div class="msg-content">
+                    <b>Candinho</b>
+                    <div class="typing"><span></span><span></span><span></span></div>
+                </div>
+            </div>`;
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+
+        try {
+            const resposta = await getResposta(pergunta);
+            
+            document.getElementById(pensandoId).remove();
+            
+            chatDiv.innerHTML += `
+                <div class="msg ai-msg">
+                    <img src="https://i.imgur.com/fnMYS0Z.png" class="msg-avatar">
+                    <div class="msg-content">
+                        <b>Candinho</b>
+                        ${escapeHtml(resposta)}
+                    </div>
+                </div>`;
+            
+        } catch (err) {
+            console.error(err);
+            const pensandoDiv = document.getElementById(pensandoId);
+            if (pensandoDiv) {
+                pensandoDiv.querySelector('.msg-content').innerHTML = `
+                    <b>Candinho</b>
+                    😅 Ops, me enrolei todo! Pode repetir a pergunta, por favor?`;
+            }
+        }
+        
+        chatDiv.scrollTop = chatDiv.scrollHeight;
+        modeBadge.textContent = "pronto";
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !btn.disabled) {
+            enviarMensagem();
+        }
+    });
+
+    // --- Inicialização completa ---
+    async function init() {
+        await testCloud();
+        const localOk = await initLocal();
+        
+        if (localOk || isCloudAvailable) {
+            statusDiv.innerHTML = "<span class='success'>✅ Candinho pronto para te ajudar!</span>";
+            input.disabled = false;
+            btn.disabled = false;
+            input.placeholder = "Pergunte sobre arte...";
+            input.focus();
+        } else {
+            statusDiv.innerHTML = "<span class='error'>❌ Candinho não conseguiu iniciar. Recarregue a página.</span>";
+        }
+    }
+    
+    init();
+</script>
 </body>
 </html>
