@@ -82,6 +82,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
         
         .mode-indicator {
@@ -266,12 +267,12 @@
     // --- Configuração ---
     const selectedModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
     let engine = null;
-    let isCloudAvailable = true;  // Será testado ao iniciar
+    let isCloudAvailable = true;
 
     // --- Base de conhecimento local ---
     const conhecimentoLocal = {
-        saudacoes: ["oi", "olá", "opa", "e aí", "bom dia", "boa tarde", "boa noite"],
-        artistas: ["van gogh", "monalisa", "da vinci", "tarsila", "portinari", "picasso", "frida"],
+        saudacoes: ["oi", "olá", "opa", "e aí", "bom dia", "boa tarde", "boa noite", "ola"],
+        artistas: ["van gogh", "monalisa", "da vinci", "tarsila", "portinari", "picasso", "frida", "leonardo", "michelangelo", "salvador dali"],
         tecnicas: ["aquarela", "óleo", "desenho", "pintura", "escultura", "gravura"]
     };
 
@@ -280,28 +281,19 @@
         const p = pergunta.toLowerCase();
         const palavras = p.split(' ').length;
         
-        // Perguntas muito simples - modo local
         if (palavras <= 3) return "local";
-        
-        // Saudações - modo local
         if (conhecimentoLocal.saudacoes.some(s => p.includes(s))) return "local";
+        if (conhecimentoLocal.artistas.some(a => p.includes(a)) && palavras < 10) return "local";
         
-        // Perguntas sobre artistas conhecidos - modo local
-        if (conhecimentoLocal.artistas.some(a => p.includes(a))) return "local";
-        
-        // Perguntas complexas - modo nuvem
         const termosComplexos = [
             "compare", "diferença", "semelhança", "análise", "contexto histórico",
             "influência", "movimento artístico", "por que", "explique detalhadamente",
-            "qual a importância", "o que significa", "história completa"
+            "qual a importância", "o que significa", "história completa", "conte-me mais"
         ];
         
         if (termosComplexos.some(t => p.includes(t))) return "cloud";
-        
-        // Perguntas longas - modo nuvem
         if (palavras > 15) return "cloud";
         
-        // Padrão: local
         return "local";
     }
 
@@ -315,13 +307,14 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
                     messages: [
                         { 
                             role: "system", 
                             content: `Você é o Candinho, um mentor de arte super animado para crianças de 10 anos.
                             
 REGRAS IMPORTANTES:
-- Responda em português do Brasil, NUNCA use linguagem neutra (nada de "todes", "amigues", etc.)
+- Responda em português do Brasil, NUNCA use linguagem neutra
 - Use "meninos e meninas", "crianças", "amigos", "pessoas"
 - Seja alegre, divertido e use emojis de arte 🎨 ✨ 🖌️
 - Responda de forma clara e educativa, máximo 4 frases
@@ -335,7 +328,11 @@ REGRAS IMPORTANTES:
                 })
             });
             
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                const erro = await response.json();
+                console.error("Erro da API:", erro);
+                throw new Error(`HTTP ${response.status}`);
+            }
             
             const data = await response.json();
             return data.choices[0].message.content;
@@ -387,19 +384,16 @@ REGRAS:
         const complexidade = detectarComplexidade(pergunta);
         console.log(`[Complexidade: ${complexidade}] Pergunta: ${pergunta}`);
         
-        // Tentar local primeiro se for adequado
         if (complexidade === "local" && engine) {
             const resposta = await respostaLocal(pergunta);
             if (resposta) return resposta;
         }
         
-        // Se a pergunta é complexa OU o local falhou, tenta nuvem
         if (isCloudAvailable) {
             const resposta = await respostaCloud(pergunta);
             if (resposta) return resposta;
         }
         
-        // Fallback: resposta manual se tudo falhar
         return "Olá! Sou o Candinho e adoro arte! 🎨 Pode repetir sua pergunta? Quero muito te ajudar!";
     }
 
@@ -416,11 +410,14 @@ REGRAS:
             
             engine = await CreateMLCEngine(selectedModel, { 
                 initProgressCallback: (progress) => {
-                    const statusText = progress.text;
                     if (progress.progress) {
                         progressDiv.style.width = (progress.progress * 100) + "%";
                     }
-                    if (statusText.includes("Finish")) {
+                    if (progress.text) {
+                        const shortText = progress.text.length > 50 ? progress.text.substring(0, 50) + "..." : progress.text;
+                        statusDiv.innerHTML = `<span>📥 ${shortText}</span>`;
+                    }
+                    if (progress.text && progress.text.includes("Finish")) {
                         statusDiv.innerHTML = "<span>✅ Cérebro local carregado!</span>";
                     }
                 }
@@ -442,26 +439,38 @@ REGRAS:
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
                     messages: [{ role: "user", content: "Diga 'ok'" }],
                     max_tokens: 5
                 })
             });
             isCloudAvailable = response.ok;
+            if (isCloudAvailable) {
+                console.log("✅ Nuvem disponível");
+            } else {
+                console.log("⚠️ Nuvem indisponível");
+            }
         } catch (e) {
             isCloudAvailable = false;
+            console.log("⚠️ Nuvem indisponível:", e.message);
         }
         
         if (!isCloudAvailable) {
-            statusDiv.innerHTML += "<span class='error'> ⚠️ Nuvem indisponível, usando só local</span>";
+            const statusText = statusDiv.innerHTML;
+            statusDiv.innerHTML = statusText + "<span class='error'> ⚠️ Nuvem indisponível, usando só local</span>";
         }
     }
 
     // --- Enviar mensagem ---
     window.enviarMensagem = async function() {
+        if (!engine && !isCloudAvailable) {
+            alert("Candinho ainda está carregando. Aguarde um momento!");
+            return;
+        }
+        
         const pergunta = input.value.trim();
         if (!pergunta) return;
 
-        // Mostrar pergunta do usuário
         chatDiv.innerHTML += `
             <div class="msg user-msg">
                 <div class="msg-content">
@@ -472,7 +481,6 @@ REGRAS:
         input.value = "";
         chatDiv.scrollTop = chatDiv.scrollHeight;
 
-        // Indicador de pensando
         const pensandoId = "p-" + Date.now();
         chatDiv.innerHTML += `
             <div class="msg ai-msg" id="${pensandoId}">
@@ -487,7 +495,8 @@ REGRAS:
         try {
             const resposta = await getResposta(pergunta);
             
-            document.getElementById(pensandoId).remove();
+            const pensandoDiv = document.getElementById(pensandoId);
+            if (pensandoDiv) pensandoDiv.remove();
             
             chatDiv.innerHTML += `
                 <div class="msg ai-msg">
@@ -510,6 +519,11 @@ REGRAS:
         
         chatDiv.scrollTop = chatDiv.scrollHeight;
         modeBadge.textContent = "pronto";
+        setTimeout(() => {
+            if (modeBadge.textContent === "pronto") {
+                modeBadge.textContent = "ativo";
+            }
+        }, 2000);
     }
     
     function escapeHtml(text) {
