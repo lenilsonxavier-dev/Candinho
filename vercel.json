@@ -1,12 +1,18 @@
 {
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+    "functions": {
+        "api/groq.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
     },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ]
+    "headers": [
+        {
+            "source": "/api/(.*)",
+            "headers": [
+                { "key": "Access-Control-Allow-Credentials", "value": "true" },
+                { "key": "Access-Control-Allow-Origin", "value": "*" },
+                { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" }
+            ]
+        }
+    ]
 }
