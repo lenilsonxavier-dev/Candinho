@@ -54,16 +54,6 @@
         .title h1 { font-size: 1.8em; margin-bottom: 5px; }
         .title small { font-size: 0.8em; color: #ffd700; }
         
-        .badge {
-            display: inline-block;
-            background: #e94560;
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 10px;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-        
         #chat { 
             height: 400px; 
             overflow-y: auto; 
@@ -201,7 +191,6 @@
         
         .error { color: #ff6b6b; }
         .success { color: #4ecdc4; }
-        .cloud-badge { font-size: 10px; background: #e94560; padding: 2px 6px; border-radius: 10px; margin-left: 8px; }
         
         #chat::-webkit-scrollbar { width: 6px; }
         #chat::-webkit-scrollbar-track { background: #1b262c; border-radius: 10px; }
@@ -214,13 +203,13 @@
     <div class="header">
         <img src="https://i.imgur.com/fnMYS0Z.png" alt="Candinho" class="avatar">
         <div class="title">
-            <h1>Candinho Híbrido 🎨</h1>
-            <small>Mentor de Arte - IA Local + Nuvem</small>
+            <h1>Candinho 🎨</h1>
+            <small>Seu amigo artista</small>
         </div>
     </div>
     
     <div id="status">
-        <span>⚙️ Inicializando cérebro digital...</span>
+        <span>⚙️ Inicializando...</span>
         <span id="modeBadge" class="mode-indicator">carregando</span>
     </div>
     <div class="progress-container">
@@ -233,8 +222,7 @@
             <div class="msg-content">
                 <b>Candinho</b>
                 Oi! Eu sou o Candinho, seu amigo artista! 🎨<br><br>
-                Eu tenho um cérebro no seu computador (bem rapidinho) e um super cérebro na nuvem (para perguntas mais difíceis).<br><br>
-                Pode me perguntar sobre arte, artistas, pinturas, desenhos, esculturas... o que você quiser! ✨
+                Adoro conversar sobre arte, pinturas, desenhos e artistas. O que você quer saber hoje? ✨
             </div>
         </div>
     </div>
@@ -256,7 +244,6 @@
 <script type="module">
     import { CreateMLCEngine } from "@mlc-ai/web-llm";
 
-    // --- DOM Elements ---
     const statusDiv = document.getElementById("status");
     const modeBadge = document.getElementById("modeBadge");
     const progressDiv = document.getElementById("progress");
@@ -264,31 +251,27 @@
     const input = document.getElementById("pergunta");
     const btn = document.getElementById("btnEnviar");
 
-    // --- Configuração ---
     const selectedModel = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
     let engine = null;
     let isCloudAvailable = true;
 
-    // --- Base de conhecimento local ---
-    const conhecimentoLocal = {
-        saudacoes: ["oi", "olá", "opa", "e aí", "bom dia", "boa tarde", "boa noite", "ola"],
-        artistas: ["van gogh", "monalisa", "da vinci", "tarsila", "portinari", "picasso", "frida", "leonardo", "michelangelo", "salvador dali"],
-        tecnicas: ["aquarela", "óleo", "desenho", "pintura", "escultura", "gravura"]
-    };
-
-    // --- Detectar complexidade da pergunta ---
+    // Detectar complexidade
     function detectarComplexidade(pergunta) {
         const p = pergunta.toLowerCase();
         const palavras = p.split(' ').length;
         
         if (palavras <= 3) return "local";
-        if (conhecimentoLocal.saudacoes.some(s => p.includes(s))) return "local";
-        if (conhecimentoLocal.artistas.some(a => p.includes(a)) && palavras < 10) return "local";
+        
+        const saudacoes = ["oi", "olá", "opa", "e aí", "bom dia", "boa tarde", "boa noite", "ola"];
+        if (saudacoes.some(s => p.includes(s))) return "local";
+        
+        const artistasSimples = ["van gogh", "monalisa", "tarsila", "picasso", "frida"];
+        if (artistasSimples.some(a => p.includes(a)) && palavras < 8) return "local";
         
         const termosComplexos = [
-            "compare", "diferença", "semelhança", "análise", "contexto histórico",
-            "influência", "movimento artístico", "por que", "explique detalhadamente",
-            "qual a importância", "o que significa", "história completa", "conte-me mais"
+            "compare", "diferença", "análise", "contexto histórico",
+            "influência", "movimento artístico", "por que", "explique",
+            "qual a importância", "história completa"
         ];
         
         if (termosComplexos.some(t => p.includes(t))) return "cloud";
@@ -297,7 +280,7 @@
         return "local";
     }
 
-    // --- Resposta via API na nuvem (backend seguro) ---
+    // Resposta da nuvem (Groq)
     async function respostaCloud(pergunta) {
         try {
             modeBadge.textContent = "☁️ nuvem";
@@ -311,29 +294,25 @@
                     messages: [
                         { 
                             role: "system", 
-                            content: `Você é o Candinho, um mentor de arte super animado para crianças de 10 anos.
-                            
-REGRAS IMPORTANTES:
-- Responda em português do Brasil, NUNCA use linguagem neutra
-- Use "meninos e meninas", "crianças", "amigos", "pessoas"
-- Seja alegre, divertido e use emojis de arte 🎨 ✨ 🖌️
-- Responda de forma clara e educativa, máximo 4 frases
-- SEMPRE incentive a criatividade e a curiosidade
-- Se não souber algo, diga: "Não sei, mas vamos pesquisar juntos!"`
+                            content: `Você é o Candinho, um mentor de arte animado e amigável.
+
+REGRAS:
+- Fale de forma natural, como se estivesse conversando com um amigo
+- Use uma linguagem alegre e acolhedora
+- Evite repetir expressões como "meninos e meninas" ou "pessoas"
+- Use emojis de arte de vez em quando 🎨
+- Responda com no máximo 3 frases
+- Seja direto e divertido
+- Incentive a curiosidade e a criatividade`
                         },
                         { role: "user", content: pergunta }
                     ],
-                    max_tokens: 200,
-                    temperature: 0.7
+                    max_tokens: 150,
+                    temperature: 0.8
                 })
             });
             
-            if (!response.ok) {
-                const erro = await response.json();
-                console.error("Erro da API:", erro);
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
             return data.choices[0].message.content;
             
@@ -344,7 +323,7 @@ REGRAS IMPORTANTES:
         }
     }
 
-    // --- Resposta via IA Local ---
+    // Resposta local
     async function respostaLocal(pergunta) {
         if (!engine) return null;
         
@@ -356,19 +335,12 @@ REGRAS IMPORTANTES:
                 messages: [
                     { 
                         role: "system", 
-                        content: `Você é o Candinho, mentor de arte para crianças de 10 anos.
-                        
-REGRAS:
-- Responda em português do Brasil, sem linguagem neutra
-- Use "amigos", "pessoas", "meninos e meninas"
-- Seja alegre, use emojis 🎨
-- Máximo 2 frases curtas
-- Se não souber, diga: "Não sei, vamos descobrir!"`
+                        content: `Você é o Candinho, amigo artista. Converse de forma natural, alegre e direta. Máximo 2 frases. Use emojis de vez em quando.`
                     },
                     { role: "user", content: pergunta }
                 ],
-                max_tokens: 100,
-                temperature: 0.7
+                max_tokens: 80,
+                temperature: 0.8
             });
             
             return reply.choices[0].message.content;
@@ -379,10 +351,9 @@ REGRAS:
         }
     }
 
-    // --- Função principal de resposta ---
     async function getResposta(pergunta) {
         const complexidade = detectarComplexidade(pergunta);
-        console.log(`[Complexidade: ${complexidade}] Pergunta: ${pergunta}`);
+        console.log(`[${complexidade}] ${pergunta}`);
         
         if (complexidade === "local" && engine) {
             const resposta = await respostaLocal(pergunta);
@@ -394,18 +365,17 @@ REGRAS:
             if (resposta) return resposta;
         }
         
-        return "Olá! Sou o Candinho e adoro arte! 🎨 Pode repetir sua pergunta? Quero muito te ajudar!";
+        return "Olá! Adoro arte! 🎨 Pode repetir sua pergunta? Quero muito te ajudar!";
     }
 
-    // --- Inicialização da IA Local ---
     async function initLocal() {
         if (!navigator.gpu) {
-            statusDiv.innerHTML = "<span class='error'>❌ WebGPU não suportado! Use Chrome ou Edge atualizado.</span>";
+            statusDiv.innerHTML = "<span class='error'>❌ WebGPU não suportado! Use Chrome ou Edge.</span>";
             return false;
         }
 
         try {
-            statusDiv.innerHTML = "<span>📥 Baixando cérebro local (1.5GB na primeira vez)...</span>";
+            statusDiv.innerHTML = "<span>📥 Baixando modelo (1.5GB, só na primeira vez)...</span>";
             progressDiv.style.width = "0%";
             
             engine = await CreateMLCEngine(selectedModel, { 
@@ -413,12 +383,8 @@ REGRAS:
                     if (progress.progress) {
                         progressDiv.style.width = (progress.progress * 100) + "%";
                     }
-                    if (progress.text) {
-                        const shortText = progress.text.length > 50 ? progress.text.substring(0, 50) + "..." : progress.text;
-                        statusDiv.innerHTML = `<span>📥 ${shortText}</span>`;
-                    }
                     if (progress.text && progress.text.includes("Finish")) {
-                        statusDiv.innerHTML = "<span>✅ Cérebro local carregado!</span>";
+                        statusDiv.innerHTML = "<span>✅ Pronto!</span>";
                     }
                 }
             });
@@ -426,13 +392,12 @@ REGRAS:
             return true;
             
         } catch (e) {
-            console.error("Erro ao carregar IA local:", e);
-            statusDiv.innerHTML = "<span class='error'>⚠️ IA local não disponível, usando apenas nuvem</span>";
+            console.error(e);
+            statusDiv.innerHTML = "<span class='error'>⚠️ Modo local indisponível</span>";
             return false;
         }
     }
 
-    // --- Testar disponibilidade da nuvem ---
     async function testCloud() {
         try {
             const response = await fetch('/api/groq', {
@@ -440,34 +405,17 @@ REGRAS:
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     model: "llama-3.3-70b-versatile",
-                    messages: [{ role: "user", content: "Diga 'ok'" }],
+                    messages: [{ role: "user", content: "Oi" }],
                     max_tokens: 5
                 })
             });
             isCloudAvailable = response.ok;
-            if (isCloudAvailable) {
-                console.log("✅ Nuvem disponível");
-            } else {
-                console.log("⚠️ Nuvem indisponível");
-            }
         } catch (e) {
             isCloudAvailable = false;
-            console.log("⚠️ Nuvem indisponível:", e.message);
-        }
-        
-        if (!isCloudAvailable) {
-            const statusText = statusDiv.innerHTML;
-            statusDiv.innerHTML = statusText + "<span class='error'> ⚠️ Nuvem indisponível, usando só local</span>";
         }
     }
 
-    // --- Enviar mensagem ---
     window.enviarMensagem = async function() {
-        if (!engine && !isCloudAvailable) {
-            alert("Candinho ainda está carregando. Aguarde um momento!");
-            return;
-        }
-        
         const pergunta = input.value.trim();
         if (!pergunta) return;
 
@@ -494,9 +442,7 @@ REGRAS:
 
         try {
             const resposta = await getResposta(pergunta);
-            
-            const pensandoDiv = document.getElementById(pensandoId);
-            if (pensandoDiv) pensandoDiv.remove();
+            document.getElementById(pensandoId)?.remove();
             
             chatDiv.innerHTML += `
                 <div class="msg ai-msg">
@@ -513,17 +459,11 @@ REGRAS:
             if (pensandoDiv) {
                 pensandoDiv.querySelector('.msg-content').innerHTML = `
                     <b>Candinho</b>
-                    😅 Ops, me enrolei todo! Pode repetir a pergunta, por favor?`;
+                    😅 Pode repetir?`;
             }
         }
         
         chatDiv.scrollTop = chatDiv.scrollHeight;
-        modeBadge.textContent = "pronto";
-        setTimeout(() => {
-            if (modeBadge.textContent === "pronto") {
-                modeBadge.textContent = "ativo";
-            }
-        }, 2000);
     }
     
     function escapeHtml(text) {
@@ -538,19 +478,18 @@ REGRAS:
         }
     });
 
-    // --- Inicialização completa ---
     async function init() {
         await testCloud();
         const localOk = await initLocal();
         
         if (localOk || isCloudAvailable) {
-            statusDiv.innerHTML = "<span class='success'>✅ Candinho pronto para te ajudar!</span>";
+            statusDiv.innerHTML = "<span class='success'>✅ Candinho pronto! Pode perguntar 🎨</span>";
             input.disabled = false;
             btn.disabled = false;
             input.placeholder = "Pergunte sobre arte...";
             input.focus();
         } else {
-            statusDiv.innerHTML = "<span class='error'>❌ Candinho não conseguiu iniciar. Recarregue a página.</span>";
+            statusDiv.innerHTML = "<span class='error'>❌ Erro ao iniciar. Recarregue a página.</span>";
         }
     }
     
